@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 
 	"github.com/rutkin/gofermart/internal/config"
 	"github.com/rutkin/gofermart/internal/logger"
@@ -24,7 +25,7 @@ type Service struct {
 func calculateHash(value string) string {
 	h := sha256.New()
 	h.Write([]byte(value))
-	return string(h.Sum(nil))
+	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
 func (s *Service) RegisterUser(username string, password string) (string, error) {
