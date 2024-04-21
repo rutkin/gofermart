@@ -5,9 +5,7 @@ import (
 	"encoding/base64"
 
 	"github.com/rutkin/gofermart/internal/config"
-	"github.com/rutkin/gofermart/internal/logger"
 	"github.com/rutkin/gofermart/internal/repository"
-	"go.uber.org/zap"
 )
 
 func NewService(config *config.Config) (*Service, error) {
@@ -29,7 +27,6 @@ func calculateHash(value string) string {
 }
 
 func (s *Service) RegisterUser(username string, password string) (string, error) {
-	logger.Log.Info("Register user", zap.String("userName", username), zap.String("password", password))
 	return s.db.CreateUser(username, calculateHash(password))
 }
 

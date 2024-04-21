@@ -52,7 +52,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	userIDcookie := &http.Cookie{Name: "userID", Value: userID}
 	http.SetCookie(w, userIDcookie)
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
@@ -71,5 +71,5 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	userIDcookie := &http.Cookie{Name: "userID", Value: userID}
 	http.SetCookie(w, userIDcookie)
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 }
