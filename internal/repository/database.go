@@ -35,7 +35,7 @@ func NewDatabase(databaseURI string) (*Database, error) {
 		return nil, err
 	}
 
-	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS users (userID uuid DEFAULT gen_random_uuid(), userName VARCHAR (50) UNIQUE NOT NULL, password VARCHAR (100) NOT NULL)")
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS users (userID uuid DEFAULT uuid_generate_v4(), userName VARCHAR (50) UNIQUE NOT NULL, password VARCHAR (100) NOT NULL)")
 	if err != nil {
 		logger.Log.Error("Failed to create users table", zap.String("error", err.Error()))
 		return nil, err
