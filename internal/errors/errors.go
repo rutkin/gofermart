@@ -1,4 +1,4 @@
-package my_errors
+package myerrors
 
 import "errors"
 

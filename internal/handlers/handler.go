@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/rutkin/gofermart/internal/config"
-	my_errors "github.com/rutkin/gofermart/internal/errors"
+	myerrors "github.com/rutkin/gofermart/internal/errors"
 	"github.com/rutkin/gofermart/internal/logger"
 	"github.com/rutkin/gofermart/internal/models"
 	"github.com/rutkin/gofermart/internal/service"
@@ -43,7 +43,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := h.service.RegisterUser(req.Login, req.Password)
 	if err != nil {
-		if errors.Is(err, my_errors.ErrExists) {
+		if errors.Is(err, myerrors.ErrExists) {
 			w.WriteHeader(http.StatusConflict)
 			return
 		}
@@ -64,7 +64,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := h.service.Login(req.Login, req.Password)
 	if err != nil {
-		if errors.Is(err, my_errors.ErrNotFound) {
+		if errors.Is(err, myerrors.ErrNotFound) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

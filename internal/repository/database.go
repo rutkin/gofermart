@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	my_errors "github.com/rutkin/gofermart/internal/errors"
+	myerrors "github.com/rutkin/gofermart/internal/errors"
 	"github.com/rutkin/gofermart/internal/logger"
 	"go.uber.org/zap"
 
@@ -56,7 +56,7 @@ func (r *Database) CreateUser(name string, password string) (string, error) {
 		logger.Log.Error("Failed to insert user", zap.String("error", err.Error()))
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
-			err = my_errors.ErrExists
+			err = myerrors.ErrExists
 		}
 		return "", err
 	}
@@ -69,7 +69,7 @@ func (r *Database) GetUserID(name string, password string) (string, error) {
 	err := r.db.QueryRow("SELECT userID FROM users WHERE userName=$1 AND password=$2", name, password).Scan(userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", my_errors.ErrNotFound
+			return "", myerrors.ErrNotFound
 		}
 		return "", err
 	}
