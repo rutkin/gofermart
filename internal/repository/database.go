@@ -29,13 +29,7 @@ func NewDatabase(databaseURI string) (*Database, error) {
 
 	defer tx.Rollback()
 
-	_, err = tx.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
-	if err != nil {
-		logger.Log.Error("Failed to create extension", zap.String("error", err.Error()))
-		return nil, err
-	}
-
-	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS users (userID uuid DEFAULT uuid_generate_v4(), userName VARCHAR (50) UNIQUE NOT NULL, password VARCHAR (100) NOT NULL)")
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS users (userID VARCHAR(50), userName VARCHAR (50) UNIQUE NOT NULL, password VARCHAR (100) NOT NULL)")
 	if err != nil {
 		logger.Log.Error("Failed to create users table", zap.String("error", err.Error()))
 		return nil, err
@@ -55,8 +49,8 @@ type Database struct {
 }
 
 func (r *Database) CreateUser(name string, password string) (string, error) {
-	var userID uuid.UUID
-	err := r.db.QueryRow("INSERT INTO users (userName, password) Values ($1, $2) RETURNING userID", name, password).Scan(userID)
+	userID := uuid.New().String()
+	_, err := r.db.Exec("INSERT INTO users (userID, userName, password) Values ($1, $2, $3)", userID, name, password)
 
 	if err != nil {
 		logger.Log.Error("Failed to insert user", zap.String("error", err.Error()))
@@ -67,11 +61,11 @@ func (r *Database) CreateUser(name string, password string) (string, error) {
 		return "", err
 	}
 
-	return userID.String(), nil
+	return userID, nil
 }
 
 func (r *Database) GetUserID(name string, password string) (string, error) {
-	var userID uuid.UUID
+	var userID string
 	err := r.db.QueryRow("SELECT userID FROM users WHERE userName=$1 AND password=$2", name, password).Scan(userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -79,5 +73,5 @@ func (r *Database) GetUserID(name string, password string) (string, error) {
 		}
 		return "", err
 	}
-	return userID.String(), nil
+	return userID, nil
 }
