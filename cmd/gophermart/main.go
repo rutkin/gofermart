@@ -14,6 +14,9 @@ func main() {
 		panic(err)
 	}
 
-	server := app.MakeServer()
-	server.Start(config.RunAddress)
+	server, err := app.MakeServer(config)
+	if err != nil {
+		panic(err)
+	}
+	server.Start()
 }

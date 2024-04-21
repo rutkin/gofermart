@@ -5,15 +5,15 @@ import (
 	"os"
 )
 
-type config struct {
+type Config struct {
 	LogLevel             string
 	RunAddress           string
 	DatabaseURI          string
 	AccrualSystemAddress string
 }
 
-func MakeConfig() *config {
-	config := &config{LogLevel: "info"}
+func MakeConfig() *Config {
+	config := &Config{LogLevel: "info"}
 	flag.StringVar(&config.RunAddress, "a", "", "run address")
 	flag.StringVar(&config.DatabaseURI, "d", "", "database uri")
 	flag.StringVar(&config.AccrualSystemAddress, "r", "", "accrual system address")

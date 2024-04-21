@@ -4,22 +4,28 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/rutkin/gofermart/internal/config"
 	"github.com/rutkin/gofermart/internal/handlers"
 	"github.com/rutkin/gofermart/internal/logger"
 	"go.uber.org/zap"
 )
 
-func MakeServer() *Server {
-	return &Server{handlers.NewHandler()}
+func MakeServer(config *config.Config) (*Server, error) {
+	handler, err := handlers.NewHandler(config)
+	if err != nil {
+		return nil, err
+	}
+	return &Server{config, handler}, nil
 }
 
 type Server struct {
+	config  *config.Config
 	handler *handlers.Handler
 }
 
-func (s *Server) Start(address string) {
-	logger.Log.Info("running server", zap.String("address", address))
-	err := http.ListenAndServe(address, s.newRouter())
+func (s *Server) Start() {
+	logger.Log.Info("running server", zap.String("address", s.config.RunAddress))
+	err := http.ListenAndServe(s.config.RunAddress, s.newRouter())
 	if err != nil {
 		panic(err)
 	}
