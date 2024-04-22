@@ -27,7 +27,13 @@ func getRegisterRequest(r *http.Request) (models.RegisterRequest, error) {
 }
 
 func setUserIDCookie(userID string, w http.ResponseWriter) {
-	userIDcookie := &http.Cookie{Name: helpers.UserIDKey, Value: userID}
+	encryptedUserID, err := helpers.Encode(userID)
+	if err != nil {
+		logger.Log.Error("failed to encrypt userID", zap.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	userIDcookie := &http.Cookie{Name: helpers.UserIDKey, Value: encryptedUserID}
 	http.SetCookie(w, userIDcookie)
 	w.WriteHeader(http.StatusOK)
 }
