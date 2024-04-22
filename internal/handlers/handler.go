@@ -39,7 +39,7 @@ func setUserIDCookie(userID string, w http.ResponseWriter) {
 }
 
 func getUserID(context context.Context) string {
-	userID := context.Value(helpers.UserIDKey)
+	userID := context.Value(helpers.UserIDContextKey)
 	return userID.(string)
 }
 
