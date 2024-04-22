@@ -33,3 +33,7 @@ func (s *Service) RegisterUser(username string, password string) (string, error)
 func (s *Service) Login(username string, password string) (string, error) {
 	return s.db.GetUserID(username, calculateHash(password))
 }
+
+func (s *Service) CreateOrder(username string, orderNumber string) error {
+	return nil
+}

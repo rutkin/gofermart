@@ -7,6 +7,7 @@ import (
 	"github.com/rutkin/gofermart/internal/config"
 	"github.com/rutkin/gofermart/internal/handlers"
 	"github.com/rutkin/gofermart/internal/logger"
+	"github.com/rutkin/gofermart/internal/middleware"
 	"go.uber.org/zap"
 )
 
@@ -36,5 +37,7 @@ func (s *Server) newRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Post("/api/user/register", s.handler.Register)
 	r.Post("/api/user/login", s.handler.Login)
+	userIDRouter := r.With(middleware.WithAuth)
+	userIDRouter.Post("/api/user/orders", s.handler.Login)
 	return r
 }
