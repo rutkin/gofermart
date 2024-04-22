@@ -38,6 +38,6 @@ func (s *Server) newRouter() http.Handler {
 	r.Post("/api/user/register", s.handler.Register)
 	r.Post("/api/user/login", s.handler.Login)
 	userIDRouter := r.With(middleware.WithAuth)
-	userIDRouter.Post("/api/user/orders", s.handler.Login)
+	userIDRouter.Post("/api/user/orders", s.handler.CreateOrder)
 	return r
 }
