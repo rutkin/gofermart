@@ -35,7 +35,7 @@ func Encode(value string) (string, error) {
 	nonce := key[(len(key) - aesgcm.NonceSize()):]
 
 	encryptedValue := aesgcm.Seal(nil, nonce, []byte(value), nil)
-	return string(encryptedValue), nil
+	return hex.EncodeToString(encryptedValue), nil
 }
 
 func Decode(value string) (string, error) {
