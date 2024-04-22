@@ -35,6 +35,12 @@ func NewDatabase(databaseURI string) (*Database, error) {
 		return nil, err
 	}
 
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS orders (userID VARCHAR(50), number VARCHAR (50) UNIQUE NOT NULL, status VARCHAR (50), accrual INTEGER, date DATE)")
+	if err != nil {
+		logger.Log.Error("Failed to create orders table", zap.String("error", err.Error()))
+		return nil, err
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		logger.Log.Error("Failed to prepare db", zap.String("error", err.Error()))
@@ -74,4 +80,33 @@ func (r *Database) GetUserID(name string, password string) (string, error) {
 		return "", err
 	}
 	return userID, nil
+}
+
+func (r *Database) CreateOrder(userID string, number string) error {
+	var currentUserID string
+	tx, err := r.db.Begin()
+	defer tx.Rollback()
+
+	rows, err := tx.Query("SELECT userID FROM orders WHERE number=$1;", number)
+	if err != nil {
+		logger.Log.Error("failed to select user from order", zap.String("error", err.Error()))
+		return err
+	}
+	err = rows.Scan(currentUserID)
+	if !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	if currentUserID != "" {
+		if currentUserID != userID {
+			return myerrors.ErrConflict
+		}
+		return myerrors.ErrExists
+	}
+	_, err = tx.Exec("INSERT INTO orders (userID, number, status, accrual, date) Values ($1, $2, NEW, 0, current_timestamp)", userID, number)
+	if err != nil {
+		logger.Log.Error("failed to insert order", zap.String("error", err.Error()))
+		return err
+	}
+	tx.Commit()
+	return nil
 }

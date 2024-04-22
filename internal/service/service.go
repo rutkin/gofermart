@@ -34,6 +34,6 @@ func (s *Service) Login(username string, password string) (string, error) {
 	return s.db.GetUserID(username, calculateHash(password))
 }
 
-func (s *Service) CreateOrder(username string, orderNumber string) error {
-	return nil
+func (s *Service) CreateOrder(userID string, orderNumber string) error {
+	return s.db.CreateOrder(userID, orderNumber)
 }
