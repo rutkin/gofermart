@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	myerrors "github.com/rutkin/gofermart/internal/errors"
 	"github.com/rutkin/gofermart/internal/logger"
+	"github.com/rutkin/gofermart/internal/models"
 	"go.uber.org/zap"
 
 	"github.com/jackc/pgerrcode"
@@ -120,4 +121,28 @@ func (r *Database) CreateOrder(userID string, number string) error {
 	}
 	tx.Commit()
 	return nil
+}
+
+func (r *Database) GetOrders(userID string) (models.OrdersResponse, error) {
+	rows, err := r.db.Query("SELECT number, status, accrual, date FROM orders WHERE userID=$1;", userID)
+	if err != nil {
+		logger.Log.Error("Failed to get orders from db", zap.String("error", err.Error()))
+		return nil, err
+	}
+
+	var result []models.OrderRecord
+	for rows.Next() {
+		err := rows.Err()
+		if err != nil {
+			logger.Log.Error("Failed to iterate db", zap.String("error", err.Error()))
+			return nil, err
+		}
+		var record models.OrderRecord
+		if err := rows.Scan(&record.Number, &record.Status, &record.Accrual, &record.UploadetAt); err != nil {
+			logger.Log.Error("Failed to scan get urls result", zap.String("error", err.Error()))
+			return nil, err
+		}
+		result = append(result, record)
+	}
+	return result, nil
 }

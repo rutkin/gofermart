@@ -40,5 +40,5 @@ func (s *Service) CreateOrder(userID string, orderNumber string) error {
 }
 
 func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
-	return models.OrdersResponse{}, nil
+	return s.db.GetOrders(userID)
 }
