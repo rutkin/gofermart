@@ -113,7 +113,7 @@ func (r *Database) CreateOrder(userID string, number string) error {
 		}
 		return myerrors.ErrExists
 	}
-	_, err = tx.Exec("INSERT INTO orders (userID, number, status, accrual, date) Values ($1, $2, NEW, 0, current_timestamp)", userID, number)
+	_, err = tx.Exec("INSERT INTO orders (userID, number, status, accrual, date) Values ($1, $2, 'NEW', 0, current_timestamp)", userID, number)
 	if err != nil {
 		logger.Log.Error("failed to insert order", zap.String("error", err.Error()))
 		return err
