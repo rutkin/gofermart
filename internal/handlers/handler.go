@@ -55,6 +55,10 @@ type Handler struct {
 	service *service.Service
 }
 
+func (h *Handler) Close() {
+	h.service.Close()
+}
+
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	req, err := getRegisterRequest(r)
 	if err != nil {

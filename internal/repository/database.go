@@ -146,3 +146,12 @@ func (r *Database) GetOrders(userID string) (models.OrdersResponse, error) {
 	}
 	return result, nil
 }
+
+func (r *Database) UpdateOrder(number string, status string, accrual int) error {
+	_, err := r.db.Exec("UPDATE orders SET status=$1 where number=$2", status, number)
+	if err != nil {
+		logger.Log.Error("Failed to delete urls from db", zap.String("error", err.Error()))
+		return err
+	}
+	return nil
+}
