@@ -83,7 +83,6 @@ func (r *Database) GetUserID(name string, password string) (string, error) {
 }
 
 func (r *Database) CreateOrder(userID string, number string) error {
-	var currentUserID string
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Log.Error("Failed to create transaction", zap.String("error", err.Error()))
@@ -96,12 +95,19 @@ func (r *Database) CreateOrder(userID string, number string) error {
 		logger.Log.Error("failed to select user from order", zap.String("error", err.Error()))
 		return err
 	}
-	rows.Next()
-	err = rows.Scan(currentUserID)
-	if !errors.Is(err, sql.ErrNoRows) {
-		return err
-	}
-	if currentUserID != "" {
+	if rows.Next() {
+		err = rows.Err()
+		if err != nil {
+			logger.Log.Error("Failed to iterate db", zap.String("error", err.Error()))
+			return err
+		}
+		var currentUserID string
+		err = rows.Scan(currentUserID)
+		if err != nil {
+			logger.Log.Error("Failed to scan value", zap.String("error", err.Error()))
+			return err
+		}
+
 		if currentUserID != userID {
 			return myerrors.ErrConflict
 		}
