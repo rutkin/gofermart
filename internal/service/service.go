@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 
 	"github.com/rutkin/gofermart/internal/config"
+	"github.com/rutkin/gofermart/internal/models"
 	"github.com/rutkin/gofermart/internal/repository"
 )
 
@@ -36,4 +37,8 @@ func (s *Service) Login(username string, password string) (string, error) {
 
 func (s *Service) CreateOrder(userID string, orderNumber string) error {
 	return s.db.CreateOrder(userID, orderNumber)
+}
+
+func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
+	return models.OrdersResponse{}, nil
 }

@@ -125,3 +125,29 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 }
+
+func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r.Context())
+	orders, err := h.service.GetOrders(userID)
+
+	if err != nil {
+		logger.Log.Error("failed to get orders", zap.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if len(orders) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	if err := enc.Encode(orders); err != nil {
+		logger.Log.Error("failed encode body", zap.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
