@@ -102,7 +102,7 @@ func (r *Database) CreateOrder(userID string, number string) error {
 			return err
 		}
 		var currentUserID string
-		err = rows.Scan(currentUserID)
+		err = rows.Scan(&currentUserID)
 		if err != nil {
 			logger.Log.Error("Failed to scan value", zap.String("error", err.Error()))
 			return err
