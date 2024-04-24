@@ -85,6 +85,10 @@ func (r *Database) GetUserID(name string, password string) (string, error) {
 func (r *Database) CreateOrder(userID string, number string) error {
 	var currentUserID string
 	tx, err := r.db.Begin()
+	if err != nil {
+		logger.Log.Error("Failed to create transaction", zap.String("error", err.Error()))
+		return err
+	}
 	defer tx.Rollback()
 
 	rows, err := tx.Query("SELECT userID FROM orders WHERE number=$1;", number)
@@ -92,6 +96,7 @@ func (r *Database) CreateOrder(userID string, number string) error {
 		logger.Log.Error("failed to select user from order", zap.String("error", err.Error()))
 		return err
 	}
+	rows.Next()
 	err = rows.Scan(currentUserID)
 	if !errors.Is(err, sql.ErrNoRows) {
 		return err
