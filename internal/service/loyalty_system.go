@@ -22,7 +22,9 @@ type LoyaltySystem struct {
 }
 
 func (ls *LoyaltySystem) GetOrdersInfo(orderNumber string) (models.LoyaltyOrderRecord, error) {
-	resp, err := myClient.Get(ls.address + "/api/orders/" + orderNumber)
+	address := ls.address + "/api/orders/" + orderNumber
+	logger.Log.Info("get order info", zap.String("address", address))
+	resp, err := myClient.Get(address)
 	var loyaltyOrder models.LoyaltyOrderRecord
 	if err := json.NewDecoder(resp.Body).Decode(&loyaltyOrder); err != nil {
 		logger.Log.Error("failed to decode loyalty order", zap.String("error", err.Error()))
