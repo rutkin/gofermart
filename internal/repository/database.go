@@ -79,7 +79,7 @@ func (r *Database) CreateUser(name string, password string) (string, error) {
 
 func (r *Database) GetUserID(name string, password string) (string, error) {
 	var userID string
-	err := r.db.QueryRow("SELECT userID FROM users WHERE userName=$1 AND password=$2", name, password).Scan(userID)
+	err := r.db.QueryRow("SELECT userID FROM users WHERE userName=$1 AND password=$2", name, password).Scan(&userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", myerrors.ErrNotFound
@@ -160,11 +160,12 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 	if processed
 	update balance*/
 	var st string
-	err := r.db.QueryRow("SELECT status FROM orders WHERE userID=$1", userID).Scan(st)
+	err := r.db.QueryRow("SELECT status FROM orders WHERE userID=$1", userID).Scan(&st)
 	if err != nil {
 		logger.Log.Error("Failed to get status", zap.String("error", err.Error()))
 		return err
 	}
+	logger.Log.Info("order status", zap.String("status", st))
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -174,7 +175,7 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 	defer tx.Rollback()
 
 	var curStatus string
-	err = tx.QueryRow("SELECT status FROM orders WHERE number=$1", number).Scan(curStatus)
+	err = tx.QueryRow("SELECT status FROM orders WHERE number=$1", number).Scan(&curStatus)
 	if err != nil {
 		logger.Log.Error("Failed to get status from db", zap.String("error", err.Error()))
 		return err
