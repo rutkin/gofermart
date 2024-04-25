@@ -19,3 +19,8 @@ type LoyaltyOrderRecord struct {
 	Status  string  `json:"status"`
 	Accrual float32 `json:"accrual,omitempty"`
 }
+
+type BalanceRecord struct {
+	Current   float32 `json:"current"`
+	Withdrawn float32 `json:"withdrawn"`
+}

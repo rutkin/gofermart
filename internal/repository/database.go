@@ -42,7 +42,7 @@ func NewDatabase(databaseURI string) (*Database, error) {
 		return nil, err
 	}
 
-	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS balance (userID VARCHAR(50), sum REAL, withDraw REAL)")
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS balance (userID VARCHAR(50), sum REAL, withDrawn REAL)")
 	if err != nil {
 		logger.Log.Error("Failed to create balance table", zap.String("error", err.Error()))
 		return nil, err
@@ -154,11 +154,6 @@ func (r *Database) GetOrders(userID string) (models.OrdersResponse, error) {
 }
 
 func (r *Database) UpdateOrder(userID string, number string, status string, accrual float32) error {
-	/*get order
-	if order new
-	update order
-	if processed
-	update balance*/
 	var st string
 	err := r.db.QueryRow("SELECT number FROM orders WHERE userID=$1", userID).Scan(&st)
 	if err != nil {
@@ -198,4 +193,14 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 		}
 	}
 	return tx.Commit()
+}
+
+func (r *Database) GetBalance(userID string) (models.BalanceRecord, error) {
+	var result models.BalanceRecord
+	err := r.db.QueryRow("SELECT sum, withDrawn FROM balance WHERE userID=$1", userID).Scan(&result.Current, &result.Withdrawn)
+	if err != nil {
+		logger.Log.Error("Failed to get balance", zap.String("error", err.Error()))
+		return models.BalanceRecord{}, err
+	}
+	return result, nil
 }

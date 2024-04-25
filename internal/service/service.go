@@ -79,3 +79,7 @@ func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
 	go s.processOrders(userID, orderNumbersToProcess)
 	return orders, nil
 }
+
+func (s *Service) GetBalance(userID string) (models.BalanceRecord, error) {
+	return models.BalanceRecord{}, nil
+}

@@ -155,3 +155,23 @@ func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func (h *Handler) GetBalance(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r.Context())
+	balance, err := h.service.GetBalance(userID)
+	if err != nil {
+		logger.Log.Error("failed to get balance", zap.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	if err := enc.Encode(balance); err != nil {
+		logger.Log.Error("failed encode body", zap.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
