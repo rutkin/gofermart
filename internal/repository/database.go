@@ -167,14 +167,14 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 	defer tx.Rollback()
 
 	var curStatus string
-	err = tx.QueryRow("SELECT status FROM orders where number=$1", number).Scan(curStatus)
+	err = tx.QueryRow("SELECT status FROM orders WHERE number=$1", number).Scan(curStatus)
 	if err != nil {
 		logger.Log.Error("Failed to get status from db", zap.String("error", err.Error()))
 		return err
 	}
 
 	if status == "PROCESSED" || status == "INVALID" {
-		_, err = tx.Exec("UPDATE orders SET status=$1, accrual=$2 where number=$3", status, accrual, number)
+		_, err = tx.Exec("UPDATE orders SET status=$1, accrual=$2 WHERE number=$3", status, accrual, number)
 		if err != nil {
 			logger.Log.Error("Failed to delete urls from db", zap.String("error", err.Error()))
 			return err
