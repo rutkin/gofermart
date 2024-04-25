@@ -58,6 +58,7 @@ func (s *Service) Login(username string, password string) (string, error) {
 }
 
 func (s *Service) CreateOrder(userID string, orderNumber string) error {
+	logger.Log.Info("create order", zap.String("number", orderNumber))
 	return s.db.CreateOrder(userID, orderNumber)
 }
 
@@ -70,6 +71,7 @@ func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
 	for key, order := range orders {
 		if order.Status == "NEW" {
 			orders[key].Status = "PROCESSING"
+			logger.Log.Info("get order", zap.String("number", order.Number))
 			orderNumbersToProcess = append(orderNumbersToProcess, order.Number)
 		}
 	}
