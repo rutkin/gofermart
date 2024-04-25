@@ -160,7 +160,7 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 	if processed
 	update balance*/
 	var st string
-	err := r.db.QueryRow("SELECT status FROM orders WHERE userID=$1", userID).Scan(&st)
+	err := r.db.QueryRow("SELECT number FROM orders WHERE userID=$1", userID).Scan(&st)
 	if err != nil {
 		logger.Log.Error("Failed to get status", zap.String("error", err.Error()))
 		return err
@@ -175,6 +175,7 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 	defer tx.Rollback()
 
 	var curStatus string
+	logger.Log.Info("get status by number", zap.String("number", number))
 	err = tx.QueryRow("SELECT status FROM orders WHERE number=$1", number).Scan(&curStatus)
 	if err != nil {
 		logger.Log.Error("Failed to get status from db", zap.String("error", err.Error()))
