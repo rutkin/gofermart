@@ -159,6 +159,13 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 	update order
 	if processed
 	update balance*/
+	var st string
+	err := r.db.QueryRow("SELECT status FROM orders WHERE number=$1", number).Scan(st)
+	if err != nil {
+		logger.Log.Error("Failed to get status", zap.String("error", err.Error()))
+		return err
+	}
+
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Log.Error("Failed to create transaction", zap.String("error", err.Error()))
