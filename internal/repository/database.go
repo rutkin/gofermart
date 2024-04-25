@@ -36,9 +36,15 @@ func NewDatabase(databaseURI string) (*Database, error) {
 		return nil, err
 	}
 
-	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS orders (userID VARCHAR(50), number VARCHAR (50) UNIQUE NOT NULL, status VARCHAR (50), accrual INTEGER, date DATE)")
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS orders (userID VARCHAR(50), number VARCHAR (50) UNIQUE NOT NULL, status VARCHAR (50), accrual REAL, date DATE)")
 	if err != nil {
 		logger.Log.Error("Failed to create orders table", zap.String("error", err.Error()))
+		return nil, err
+	}
+
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS balance (userID VARCHAR(50), sum REAL, withDraw REAL)")
+	if err != nil {
+		logger.Log.Error("Failed to create balance table", zap.String("error", err.Error()))
 		return nil, err
 	}
 
@@ -147,11 +153,40 @@ func (r *Database) GetOrders(userID string) (models.OrdersResponse, error) {
 	return result, nil
 }
 
-func (r *Database) UpdateOrder(number string, status string, accrual float32) error {
-	_, err := r.db.Exec("UPDATE orders SET status=$1 where number=$2", status, number)
+func (r *Database) UpdateOrder(userID string, number string, status string, accrual float32) error {
+	/*get order
+	if order new
+	update order
+	if processed
+	update balance*/
+	tx, err := r.db.Begin()
 	if err != nil {
-		logger.Log.Error("Failed to delete urls from db", zap.String("error", err.Error()))
+		logger.Log.Error("Failed to create transaction", zap.String("error", err.Error()))
 		return err
 	}
-	return nil
+	defer tx.Rollback()
+
+	var curStatus string
+	err = tx.QueryRow("SELECT status FROM orders where number=$1", number).Scan(curStatus)
+	if err != nil {
+		logger.Log.Error("Failed to get status from db", zap.String("error", err.Error()))
+		return err
+	}
+
+	if status == "PROCESSED" || status == "INVALID" {
+		_, err = tx.Exec("UPDATE orders SET status=$1, accrual=$2 where number=$3", status, accrual, number)
+		if err != nil {
+			logger.Log.Error("Failed to delete urls from db", zap.String("error", err.Error()))
+			return err
+		}
+	}
+
+	if curStatus == "NEW" && status == "PROCESSED" {
+		_, err = tx.Exec("UPDATE balance SET sum=sum+$1 WHERE userID=$2", accrual, userID)
+		if err != nil {
+			logger.Log.Error("Failed to update balance", zap.String("error", err.Error()))
+			return err
+		}
+	}
+	return tx.Commit()
 }

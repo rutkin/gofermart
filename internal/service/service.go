@@ -33,7 +33,7 @@ func calculateHash(value string) string {
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
-func (s *Service) processOrders(ordersNumbers []string) {
+func (s *Service) processOrders(userID string, ordersNumbers []string) {
 	defer s.wg.Done()
 	for _, orderNumber := range ordersNumbers {
 		orderInfo, err := s.ls.GetOrdersInfo(orderNumber)
@@ -41,7 +41,7 @@ func (s *Service) processOrders(ordersNumbers []string) {
 			logger.Log.Error("failed to get order info from loyalty system", zap.String("error", err.Error()))
 			return
 		}
-		s.db.UpdateOrder(orderInfo.Number, orderInfo.Status, orderInfo.Accrual)
+		s.db.UpdateOrder(userID, orderInfo.Number, orderInfo.Status, orderInfo.Accrual)
 	}
 }
 
@@ -76,6 +76,6 @@ func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
 		}
 	}
 	s.wg.Add(1)
-	go s.processOrders(orderNumbersToProcess)
+	go s.processOrders(userID, orderNumbersToProcess)
 	return orders, nil
 }
