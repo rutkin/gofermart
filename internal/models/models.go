@@ -6,10 +6,10 @@ type RegisterRequest struct {
 }
 
 type OrderRecord struct {
-	Number     string `json:"number"`
-	Status     string `json:"status"`
-	Accrual    int    `json:"accrual,omitempty"`
-	UploadetAt string `json:"uploadet_at"`
+	Number     string  `json:"number"`
+	Status     string  `json:"status"`
+	Accrual    float32 `json:"accrual,omitempty"`
+	UploadetAt string  `json:"uploadet_at"`
 }
 
 type OrdersResponse []OrderRecord
