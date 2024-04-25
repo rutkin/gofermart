@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
@@ -25,6 +26,8 @@ func (ls *LoyaltySystem) GetOrdersInfo(orderNumber string) (models.LoyaltyOrderR
 	var loyaltyOrder models.LoyaltyOrderRecord
 	if err := json.NewDecoder(resp.Body).Decode(&loyaltyOrder); err != nil {
 		logger.Log.Error("failed to decode loyalty order", zap.String("error", err.Error()))
+		body, _ := io.ReadAll(resp.Body)
+		logger.Log.Error("response", zap.String("body", string(body)))
 	}
 	defer resp.Body.Close()
 	return loyaltyOrder, err
