@@ -15,7 +15,7 @@ type OrderRecord struct {
 type OrdersResponse []OrderRecord
 
 type LoyaltyOrderRecord struct {
-	Number  string `json:"number"`
-	Status  string `json:"status"`
-	Accrual int32  `json:"accrual,omitempty"`
+	Number  string  `json:"number"`
+	Status  string  `json:"status"`
+	Accrual float32 `json:"accrual,omitempty"`
 }
