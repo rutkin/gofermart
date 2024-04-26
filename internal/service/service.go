@@ -82,5 +82,5 @@ func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
 }
 
 func (s *Service) GetBalance(userID string) (models.BalanceRecord, error) {
-	return models.BalanceRecord{}, nil
+	return s.db.GetBalance(userID)
 }
