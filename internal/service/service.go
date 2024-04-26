@@ -40,6 +40,7 @@ func (s *Service) processOrder(userID string, orderNumber string) {
 		logger.Log.Error("failed to get order info from loyalty system", zap.String("error", err.Error()))
 		return
 	}
+	logger.Log.Info("update order", zap.String("userID", userID), zap.String("number", orderInfo.Number), zap.String("syayus", orderInfo.Status), zap.Float32("accrual", orderInfo.Accrual))
 	s.db.UpdateOrder(userID, orderInfo.Number, orderInfo.Status, orderInfo.Accrual)
 }
 
