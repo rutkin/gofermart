@@ -168,7 +168,7 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 	}
 
 	query := `INSERT INTO balance (userID, sum, withDrawn) Values ($1, $2, 0.0) ON CONFLICT (userID) DO UPDATE SET sum = 111`
-	_, err = tx.Exec(query, userID)
+	_, err = tx.Exec(query, userID, accrual)
 	if err != nil {
 		logger.Log.Error("Failed to update balance", zap.String("error", err.Error()))
 		return err
