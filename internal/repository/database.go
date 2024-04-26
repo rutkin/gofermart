@@ -42,7 +42,7 @@ func NewDatabase(databaseURI string) (*Database, error) {
 		return nil, err
 	}
 
-	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS balance (userID VARCHAR(50) UNIQUE NOT NULL, sum REAL, withDrawn REAL)")
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS balance (userID VARCHAR(50) UNIQUE NOT NULL, sum REAL, withDrawn REAL), constraint sum_nonnegative check (sum >= 0)")
 	if err != nil {
 		logger.Log.Error("Failed to create balance table", zap.String("error", err.Error()))
 		return nil, err
