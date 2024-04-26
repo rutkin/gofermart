@@ -42,7 +42,7 @@ func NewDatabase(databaseURI string) (*Database, error) {
 		return nil, err
 	}
 
-	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS balance (userID VARCHAR(50), sum REAL, withDrawn REAL)")
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS balance (userID VARCHAR(50) UNIQUE NOT NULL, sum REAL, withDrawn REAL)")
 	if err != nil {
 		logger.Log.Error("Failed to create balance table", zap.String("error", err.Error()))
 		return nil, err
@@ -167,7 +167,7 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 		return err
 	}
 
-	_, err = tx.Exec("UPDATE balance SET sum=sum+$1 WHERE userID=$2", accrual, userID)
+	_, err = tx.Exec("INSERT INTO balance VALUES (userID, sum, withDrawn) Values ($1, $2, 0) ON CONFLICT (userID) DO UPDATE SET sum = sum+$2", userID, accrual)
 	if err != nil {
 		logger.Log.Error("Failed to update balance", zap.String("error", err.Error()))
 		return err
