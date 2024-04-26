@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"sync"
-	"time"
 
 	"github.com/rutkin/gofermart/internal/config"
 	"github.com/rutkin/gofermart/internal/logger"
@@ -19,14 +18,13 @@ func NewService(config *config.Config) (*Service, error) {
 		return nil, err
 	}
 	ls := NewLoyaltySystem(config.AccrualSystemAddress)
-	return &Service{db, ls, sync.WaitGroup{}, make(chan bool)}, nil
+	return &Service{db, ls, sync.WaitGroup{}}, nil
 }
 
 type Service struct {
-	db          *repository.Database
-	ls          *LoyaltySystem
-	wg          sync.WaitGroup
-	stopProcess chan bool
+	db *repository.Database
+	ls *LoyaltySystem
+	wg sync.WaitGroup
 }
 
 func calculateHash(value string) string {
@@ -35,44 +33,18 @@ func calculateHash(value string) string {
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
-func (s *Service) processOrders(userID string, ordersNumbers []string) {
-	defer s.wg.Done()
-	for _, orderNumber := range ordersNumbers {
-		orderInfo, err := s.ls.GetOrdersInfo(orderNumber)
-		if err != nil {
-			logger.Log.Error("failed to get order info from loyalty system", zap.String("error", err.Error()))
-			return
-		}
-		s.db.UpdateOrder(userID, orderInfo.Number, orderInfo.Status, orderInfo.Accrual)
-	}
-}
-
 func (s *Service) processOrder(userID string, orderNumber string) {
 	defer s.wg.Done()
-	for {
-		select {
-		case <-s.stopProcess:
-			logger.Log.Info("stop process order", zap.String("number", orderNumber))
-			return
-		default:
-			orderInfo, err := s.ls.GetOrdersInfo(orderNumber)
-			if err != nil {
-				logger.Log.Error("failed to get order info from loyalty system", zap.String("error", err.Error()))
-				return
-			}
-			switch orderInfo.Status {
-			case "PROCESSED", "INVALID":
-				s.db.UpdateOrder(userID, orderInfo.Number, orderInfo.Status, orderInfo.Accrual)
-				return
-			default:
-				time.Sleep(1 * time.Second)
-			}
-		}
+	orderInfo, err := s.ls.GetOrdersInfo(orderNumber)
+	if err != nil {
+		logger.Log.Error("failed to get order info from loyalty system", zap.String("error", err.Error()))
+		return
 	}
+	s.db.UpdateOrder(userID, orderInfo.Number, orderInfo.Status, orderInfo.Accrual)
 }
 
 func (s *Service) Close() {
-	s.stopProcess <- true
+	s.ls.Stop()
 	s.wg.Wait()
 }
 
