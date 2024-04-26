@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"sync"
+	"time"
 
 	"github.com/rutkin/gofermart/internal/config"
 	"github.com/rutkin/gofermart/internal/logger"
@@ -18,13 +19,14 @@ func NewService(config *config.Config) (*Service, error) {
 		return nil, err
 	}
 	ls := NewLoyaltySystem(config.AccrualSystemAddress)
-	return &Service{db, ls, sync.WaitGroup{}}, nil
+	return &Service{db, ls, sync.WaitGroup{}, make(chan bool)}, nil
 }
 
 type Service struct {
-	db *repository.Database
-	ls *LoyaltySystem
-	wg sync.WaitGroup
+	db          *repository.Database
+	ls          *LoyaltySystem
+	wg          sync.WaitGroup
+	stopProcess chan bool
 }
 
 func calculateHash(value string) string {
@@ -45,7 +47,32 @@ func (s *Service) processOrders(userID string, ordersNumbers []string) {
 	}
 }
 
+func (s *Service) processOrder(userID string, orderNumber string) {
+	defer s.wg.Done()
+	for {
+		select {
+		case <-s.stopProcess:
+			logger.Log.Info("stop process order", zap.String("number", orderNumber))
+			return
+		default:
+			orderInfo, err := s.ls.GetOrdersInfo(orderNumber)
+			if err != nil {
+				logger.Log.Error("failed to get order info from loyalty system", zap.String("error", err.Error()))
+				return
+			}
+			switch orderInfo.Status {
+			case "PROCESSED", "INVALID":
+				s.db.UpdateOrder(userID, orderInfo.Number, orderInfo.Status, orderInfo.Accrual)
+				return
+			default:
+				time.Sleep(1 * time.Second)
+			}
+		}
+	}
+}
+
 func (s *Service) Close() {
+	s.stopProcess <- true
 	s.wg.Wait()
 }
 
@@ -59,7 +86,12 @@ func (s *Service) Login(username string, password string) (string, error) {
 
 func (s *Service) CreateOrder(userID string, orderNumber string) error {
 	logger.Log.Info("create order", zap.String("number", orderNumber))
-	return s.db.CreateOrder(userID, orderNumber)
+	err := s.db.CreateOrder(userID, orderNumber)
+	if err == nil {
+		s.wg.Add(1)
+		go s.processOrder(userID, orderNumber)
+	}
+	return err
 }
 
 func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
@@ -67,16 +99,12 @@ func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
 	if err != nil {
 		return models.OrdersResponse{}, err
 	}
-	var orderNumbersToProcess []string
+
 	for key, order := range orders {
 		if order.Status == "NEW" {
 			orders[key].Status = "PROCESSING"
-			logger.Log.Info("get order", zap.String("number", order.Number))
-			orderNumbersToProcess = append(orderNumbersToProcess, order.Number)
 		}
 	}
-	s.wg.Add(1)
-	go s.processOrders(userID, orderNumbersToProcess)
 	return orders, nil
 }
 

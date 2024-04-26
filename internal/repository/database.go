@@ -154,14 +154,6 @@ func (r *Database) GetOrders(userID string) (models.OrdersResponse, error) {
 }
 
 func (r *Database) UpdateOrder(userID string, number string, status string, accrual float32) error {
-	var st string
-	err := r.db.QueryRow("SELECT number FROM orders WHERE userID=$1", userID).Scan(&st)
-	if err != nil {
-		logger.Log.Error("Failed to get status", zap.String("error", err.Error()))
-		return err
-	}
-	logger.Log.Info("order status", zap.String("status", st))
-
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Log.Error("Failed to create transaction", zap.String("error", err.Error()))
@@ -169,29 +161,18 @@ func (r *Database) UpdateOrder(userID string, number string, status string, accr
 	}
 	defer tx.Rollback()
 
-	var curStatus string
-	logger.Log.Info("get status by number", zap.String("number", number))
-	err = tx.QueryRow("SELECT status FROM orders WHERE number=$1", number).Scan(&curStatus)
+	_, err = tx.Exec("UPDATE orders SET status=$1, accrual=$2 WHERE number=$3", status, accrual, number)
 	if err != nil {
-		logger.Log.Error("Failed to get status from db", zap.String("error", err.Error()))
+		logger.Log.Error("Failed to delete urls from db", zap.String("error", err.Error()))
 		return err
 	}
 
-	if status == "PROCESSED" || status == "INVALID" {
-		_, err = tx.Exec("UPDATE orders SET status=$1, accrual=$2 WHERE number=$3", status, accrual, number)
-		if err != nil {
-			logger.Log.Error("Failed to delete urls from db", zap.String("error", err.Error()))
-			return err
-		}
+	_, err = tx.Exec("UPDATE balance SET sum=sum+$1 WHERE userID=$2", accrual, userID)
+	if err != nil {
+		logger.Log.Error("Failed to update balance", zap.String("error", err.Error()))
+		return err
 	}
 
-	if curStatus == "NEW" && status == "PROCESSED" {
-		_, err = tx.Exec("UPDATE balance SET sum=sum+$1 WHERE userID=$2", accrual, userID)
-		if err != nil {
-			logger.Log.Error("Failed to update balance", zap.String("error", err.Error()))
-			return err
-		}
-	}
 	return tx.Commit()
 }
 
