@@ -35,6 +35,7 @@ func calculateHash(value string) string {
 
 func (s *Service) processOrder(userID string, orderNumber string) {
 	defer s.wg.Done()
+	s.db.UpdateOrder(userID, orderNumber, "PROCESSING", 0)
 	orderInfo, err := s.ls.GetOrdersInfo(orderNumber)
 	if err != nil {
 		logger.Log.Error("failed to get order info from loyalty system", zap.String("error", err.Error()))
@@ -73,11 +74,6 @@ func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
 		return models.OrdersResponse{}, err
 	}
 
-	for key, order := range orders {
-		if order.Status == "NEW" {
-			orders[key].Status = "PROCESSING"
-		}
-	}
 	return orders, nil
 }
 

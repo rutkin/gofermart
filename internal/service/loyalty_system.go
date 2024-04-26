@@ -54,6 +54,7 @@ loop:
 				}
 				time.Sleep(time.Duration(timeout) * time.Second)
 			case http.StatusNoContent:
+				logger.Log.Info("no content")
 				time.Sleep(1 * time.Second)
 			case http.StatusInternalServerError:
 				logger.Log.Error("internal server error")
