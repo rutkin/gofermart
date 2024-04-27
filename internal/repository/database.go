@@ -48,11 +48,11 @@ func NewDatabase(databaseURI string) (*Database, error) {
 		return nil, err
 	}
 
-	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS withdrawals (userID VARCHAR(50), order VARCHAR (50), sum REAL, date DATE)")
+	/*_, err = tx.Exec("CREATE TABLE IF NOT EXISTS withdrawals (userID VARCHAR(50), order VARCHAR (50), sum REAL, date DATE)")
 	if err != nil {
 		logger.Log.Error("Failed to create withdrawals table", zap.String("error", err.Error()))
 		return nil, err
-	}
+	}*/
 
 	err = tx.Commit()
 	if err != nil {
