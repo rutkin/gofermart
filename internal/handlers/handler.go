@@ -202,3 +202,27 @@ func (h *Handler) Withdraw(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func (h *Handler) GetWithdrawals(w http.ResponseWriter, r *http.Request) {
+	userID := getUserID(r.Context())
+	resp, err := h.service.GetWithdrawals(userID)
+	if err != nil {
+		logger.Log.Error("failed to get withdrawals", zap.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if len(resp) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	if err := enc.Encode(resp); err != nil {
+		logger.Log.Error("failed encode body", zap.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

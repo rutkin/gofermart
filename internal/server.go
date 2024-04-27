@@ -42,5 +42,6 @@ func (s *Server) newRouter() http.Handler {
 	userIDRouter.Get("/api/user/orders", s.handler.GetOrders)
 	userIDRouter.Get("/api/user/balance", s.handler.GetBalance)
 	userIDRouter.Post("/api/user/balance/withdraw", s.handler.Withdraw)
+	userIDRouter.Get("/api/user/withdrawals", s.handler.GetWithdrawals)
 	return r
 }

@@ -29,3 +29,9 @@ type WithdrawRecord struct {
 	Number string  `json:"order"`
 	Sum    float32 `json:"sum"`
 }
+
+type WithdrawalResponse struct {
+	Number      string  `json:"order"`
+	Sum         float32 `json:"sum"`
+	ProcessedAt string  `json:"pocessed_at"`
+}

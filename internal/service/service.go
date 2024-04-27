@@ -94,3 +94,12 @@ func (s *Service) Withdraw(userID string, rec models.WithdrawRecord) error {
 	}
 	return nil
 }
+
+func (s *Service) GetWithdrawals(userID string) ([]models.WithdrawalResponse, error) {
+	res, err := s.db.GetWithdrawals(userID)
+	if err != nil {
+		logger.Log.Info("failed to withdrawals", zap.String("error", err.Error()))
+		return []models.WithdrawalResponse{}, err
+	}
+	return res, nil
+}

@@ -48,11 +48,11 @@ func NewDatabase(databaseURI string) (*Database, error) {
 		return nil, err
 	}
 
-	/*_, err = tx.Exec("CREATE TABLE IF NOT EXISTS withdrawals (userID VARCHAR(50), order VARCHAR (50), sum REAL, date DATE)")
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS withdrawals (userID VARCHAR(50), number VARCHAR (50), sum REAL, date DATE)")
 	if err != nil {
 		logger.Log.Error("Failed to create withdrawals table", zap.String("error", err.Error()))
 		return nil, err
-	}*/
+	}
 
 	err = tx.Commit()
 	if err != nil {
@@ -227,12 +227,6 @@ func (r *Database) Withdraw(userID string, rec models.WithdrawRecord) error {
 		return err
 	}
 
-	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS withdrawals (userID VARCHAR(50), number VARCHAR (50), sum REAL, date DATE)")
-	if err != nil {
-		logger.Log.Error("Failed to create withdrawals table", zap.String("error", err.Error()))
-		return err
-	}
-
 	_, err = tx.Exec("INSERT INTO withdrawals (userID, number, sum, date) Values ($1, $2, $3, current_timestamp)", userID, rec.Number, rec.Sum)
 	if err != nil {
 		logger.Log.Error("Failed to insert into withdrawals", zap.String("error", err.Error()))
@@ -240,4 +234,29 @@ func (r *Database) Withdraw(userID string, rec models.WithdrawRecord) error {
 	}
 
 	return tx.Commit()
+}
+
+func (r *Database) GetWithdrawals(userID string) ([]models.WithdrawalResponse, error) {
+	rows, err := r.db.Query("SELECT number, sum, date FROM withdrawals WHERE userID=$1", userID)
+	if err != nil {
+		logger.Log.Error("Failed to get withdrawals", zap.String("error", err.Error()))
+		return []models.WithdrawalResponse{}, err
+	}
+
+	var result []models.WithdrawalResponse
+
+	for rows.Next() {
+		err := rows.Err()
+		if err != nil {
+			logger.Log.Error("Failed to iterate db", zap.String("error", err.Error()))
+			return nil, err
+		}
+		var item models.WithdrawalResponse
+		if err := rows.Scan(&item.Number, &item.Sum, &item.ProcessedAt); err != nil {
+			logger.Log.Error("Failed to scan get withdrawals result", zap.String("error", err.Error()))
+			return nil, err
+		}
+		result = append(result, item)
+	}
+	return result, nil
 }
