@@ -175,3 +175,30 @@ func (h *Handler) GetBalance(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+func (h *Handler) Withdraw(w http.ResponseWriter, r *http.Request) {
+	var req models.WithdrawRecord
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logger.Log.Error("failed to decode body", zap.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	userID := getUserID(r.Context())
+	err := h.service.Withdraw(userID, req)
+	if errors.Is(err, myerrors.ErrInvalid) {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
+	if errors.Is(err, myerrors.ErrNotEnoughtMoney) {
+		w.WriteHeader(http.StatusPaymentRequired)
+		return
+	}
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

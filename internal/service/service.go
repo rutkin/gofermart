@@ -80,3 +80,17 @@ func (s *Service) GetOrders(userID string) (models.OrdersResponse, error) {
 func (s *Service) GetBalance(userID string) (models.BalanceRecord, error) {
 	return s.db.GetBalance(userID)
 }
+
+func (s *Service) Withdraw(userID string, rec models.WithdrawRecord) error {
+	_, err := s.db.GetOrder(rec.Number)
+	if err != nil {
+		logger.Log.Info("failed get order", zap.String("error", err.Error()))
+		return err
+	}
+
+	err = s.db.Withdraw(userID, rec.Sum)
+	if err != nil {
+		logger.Log.Error("failed withdraw", zap.String("error", err.Error()))
+	}
+	return nil
+}

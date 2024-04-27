@@ -129,6 +129,20 @@ func (r *Database) CreateOrder(userID string, number string) error {
 	return nil
 }
 
+func (r *Database) GetOrder(number string) (models.OrderRecord, error) {
+	var result models.OrderRecord
+	err := r.db.QueryRow("SELECT number, status, accrual, date FROM orders WHERE number=$1;", number).Scan(&result.Number, result.Status, result.Accrual, result.UploadetAt)
+	if err != nil {
+		//if errors.Is(err, pgx.ErrNoRows) {
+		//	return models.OrderRecord{}, myerrors.ErrInvalid
+		//}
+		logger.Log.Error("Failed to get orders from db", zap.String("error", err.Error()))
+		return models.OrderRecord{}, err
+	}
+
+	return result, nil
+}
+
 func (r *Database) GetOrders(userID string) (models.OrdersResponse, error) {
 	rows, err := r.db.Query("SELECT number, status, accrual, date FROM orders WHERE userID=$1;", userID)
 	if err != nil {
@@ -185,4 +199,17 @@ func (r *Database) GetBalance(userID string) (models.BalanceRecord, error) {
 		return models.BalanceRecord{}, err
 	}
 	return result, nil
+}
+
+func (r *Database) Withdraw(userID string, sum float32) error {
+	_, err := r.db.Exec("UPDATE balance SET sum=sum-$1 WHERE userID=$2", sum, userID)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+			return myerrors.ErrNotEnoughtMoney
+		}
+		logger.Log.Error("Failed to update balance", zap.String("error", err.Error()))
+		return err
+	}
+	return nil
 }
