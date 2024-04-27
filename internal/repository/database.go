@@ -125,13 +125,15 @@ func (r *Database) CreateOrder(userID string, number string) error {
 		logger.Log.Error("failed to insert order", zap.String("error", err.Error()))
 		return err
 	}
+	logger.Log.Info("create order", zap.String("number", number))
 	tx.Commit()
 	return nil
 }
 
 func (r *Database) GetOrder(number string) (models.OrderRecord, error) {
+	logger.Log.Info("get order", zap.String("number", number))
 	var result models.OrderRecord
-	err := r.db.QueryRow("SELECT number, status, accrual, date FROM orders WHERE number=$1;", number).Scan(&result.Number, result.Status, result.Accrual, result.UploadetAt)
+	err := r.db.QueryRow("SELECT number, status, accrual, date FROM orders WHERE number=$1;", number).Scan(&result.Number, &result.Status, &result.Accrual, &result.UploadetAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.OrderRecord{}, myerrors.ErrInvalid
