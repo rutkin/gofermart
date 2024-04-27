@@ -88,7 +88,7 @@ func (s *Service) Withdraw(userID string, rec models.WithdrawRecord) error {
 		return err
 	}*/
 
-	err := s.db.Withdraw(userID, rec.Sum)
+	err := s.db.Withdraw(userID, rec)
 	if err != nil {
 		logger.Log.Error("failed to withdraw", zap.String("error", err.Error()))
 	}
