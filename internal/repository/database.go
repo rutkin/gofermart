@@ -48,6 +48,12 @@ func NewDatabase(databaseURI string) (*Database, error) {
 		return nil, err
 	}
 
+	_, err = tx.Exec("CREATE TABLE IF NOT EXISTS withdrawals (userID VARCHAR(50), order VARCHAR (50), sum REAL, date DATE)")
+	if err != nil {
+		logger.Log.Error("Failed to create withdrawals table", zap.String("error", err.Error()))
+		return nil, err
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		logger.Log.Error("Failed to prepare db", zap.String("error", err.Error()))
@@ -203,8 +209,15 @@ func (r *Database) GetBalance(userID string) (models.BalanceRecord, error) {
 	return result, nil
 }
 
-func (r *Database) Withdraw(userID string, sum float32) error {
-	_, err := r.db.Exec("UPDATE balance SET sum=sum-$1, withDrawn=withDrawn+$1 WHERE userID=$2", sum, userID)
+func (r *Database) Withdraw(userID string, rec models.WithdrawRecord) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		logger.Log.Error("Failed to create transaction", zap.String("error", err.Error()))
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec("UPDATE balance SET sum=sum-$1, withDrawn=withDrawn+$1 WHERE userID=$2", rec.Sum, userID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
@@ -213,5 +226,12 @@ func (r *Database) Withdraw(userID string, sum float32) error {
 		logger.Log.Error("Failed to update balance", zap.String("error", err.Error()))
 		return err
 	}
-	return nil
+
+	_, err = tx.Exec("INSERT INTO withdrawals (userID, order, sum, date) Values ($1, $2, $3, current_timestamp)", userID, rec.Number, rec.Sum)
+	if err != nil {
+		logger.Log.Error("Failed to insert into withdrawals", zap.String("error", err.Error()))
+		return err
+	}
+
+	return tx.Commit()
 }
