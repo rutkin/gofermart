@@ -204,7 +204,7 @@ func (r *Database) GetBalance(userID string) (models.BalanceRecord, error) {
 }
 
 func (r *Database) Withdraw(userID string, sum float32) error {
-	_, err := r.db.Exec("UPDATE balance SET sum=sum-$1 WHERE userID=$2", sum, userID)
+	_, err := r.db.Exec("UPDATE balance SET sum=sum-$1, withDrawn=withDrawn+$1 WHERE userID=$2", sum, userID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
