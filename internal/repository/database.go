@@ -133,10 +133,10 @@ func (r *Database) GetOrder(number string) (models.OrderRecord, error) {
 	var result models.OrderRecord
 	err := r.db.QueryRow("SELECT number, status, accrual, date FROM orders WHERE number=$1;", number).Scan(&result.Number, result.Status, result.Accrual, result.UploadetAt)
 	if err != nil {
-		//if errors.Is(err, pgx.ErrNoRows) {
-		//	return models.OrderRecord{}, myerrors.ErrInvalid
-		//}
-		logger.Log.Error("Failed to get orders from db", zap.String("error", err.Error()))
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.OrderRecord{}, myerrors.ErrInvalid
+		}
+		logger.Log.Error("Failed to get order from db", zap.String("error", err.Error()))
 		return models.OrderRecord{}, err
 	}
 
