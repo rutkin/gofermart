@@ -82,12 +82,6 @@ func (s *Service) GetBalance(userID string) (models.BalanceRecord, error) {
 }
 
 func (s *Service) Withdraw(userID string, rec models.WithdrawRecord) error {
-	/*_, err := s.db.GetOrder(rec.Number)
-	if err != nil {
-		logger.Log.Info("failed to get order", zap.String("error", err.Error()))
-		return err
-	}*/
-
 	err := s.db.Withdraw(userID, rec)
 	if err != nil {
 		logger.Log.Error("failed to withdraw", zap.String("error", err.Error()))
